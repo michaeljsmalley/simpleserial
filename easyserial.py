@@ -38,10 +38,30 @@ def interface_selection():
 
     return chosen
 
+def baud_rate_selection():
+    print "Available Baud Rates"
+    print "===================="
+    baudrates = [110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 56000, 57600, 115200]
+    for item in enumerate(baudrates):
+        print "%d - %s" % item
+    try:
+        choice = int(raw_input("Choose the baud rate you would like to use for serial communications: "))
+    except ValueError:
+        print "Not a number."
+
+    try:
+        chosen = baudrates[choice]
+    except IndexError:
+        print "Invalid baud rate."
+
+    return chosen
+
 # Get user selection for a serial interface and initialize it
-ser = serial.Serial(interface_selection(), 9600, timeout=1)
+ser = serial.Serial(interface_selection(), baud_rate_selection(), timeout=1)
 # Output the name of the desired serial interface
-print "Serial connection via: " + ser.portstr
+print "Serial Device: " + ser.name
+print "Baud Rate:     " + str(ser.baudrate)
+print ""
 # Write to the serial interface
 ser.write("writing to serial cable")
 # Close the connection
