@@ -27,6 +27,31 @@ def get_interfaces():
 
     return devicelist
 
+def stopbits_convert(value):
+    ''' Converts value to constant understood by pyserial'''
+    if value=="1":
+        stopbits = serial.STOPBITS_ONE
+    elif value=="1.5":
+        stopbits = serial.STOPBITS_ONE_POINT_FIVE
+    elif value=="2":
+        stopbits = serial.STOPBITS_TWO
+    else:
+        stopbits = stopbits_selection()
+
+    return stopbits
+
+def parity_convert(parityvalue):
+    if parityvalue in ("None", "none", "NONE", "N", "n"):
+        parity = serial.PARITY_NONE
+    elif parityvalue in ("Even", "even", "EVEN", "E", "e"):
+        parity = serial.PARITY_EVEN
+    elif parityvalue in ("Odd", "odd", "ODD", "O", "o"):
+        parity = serial.PARITY_ODD
+    else:
+        parity = parity_selection()
+
+    return parity
+
 def interface_selection():
 
     devicelist = get_interfaces()
@@ -101,7 +126,7 @@ def stopbits_selection():
     except IndexError:
         print "Invalid stopbits choice."
 
-    return chosen
+    return stopbits_convert(chosen)
 
 def parity_selection():
     print "Available Parities"
@@ -119,7 +144,7 @@ def parity_selection():
     except IndexError:
         print "Invalid parity."
 
-    return chosen
+    return parity_convert(chosen)
 
 def flowcontrol_selection():
     print "Flow Control On or Off?"
@@ -167,7 +192,7 @@ def message_prompt():
 parser = argparse.ArgumentParser(description='A simple serial connection handler.')
 parser.add_argument('-i', '--interface', dest='interface', type=str, help='path to a serial interface, (e.g. /dev/tty.interfacename)')
 parser.add_argument('-r', '--baudrate', dest='baudrate', help='Desired baud rate, (e.g. 9600)')
-parser.add_argument('-d', '--databits', dest='databits', type=int, help='Desired data bits (e.g. 5, 6, 7 or 8)')
+parser.add_argument('-d', '--databits', dest='databits', type=str, help='Desired data bits (e.g. 5, 6, 7 or 8)')
 parser.add_argument('-s', '--stopbits', dest='stopbits', type=str, help='Desired stop bits (e.g. 1, 1.5, or 2)')
 parser.add_argument('-p', '--parity', dest='parity', type=str, help='Desired parity (e.g. None, Even, Odd, Mark, or Space)')
 parser.add_argument('-f', '--flowcontrol', dest='flowcontrol', type=str, help='Flow control on or off')
@@ -182,30 +207,15 @@ baudrate = args.baudrate if args.baudrate else baudrate_selection()
 
 databits = args.databits if args.databits else databits_selection()
 
-if args.stopbits=="1":
-    stopbits = serial.STOPBITS_ONE
-elif args.stopbits=="1.5":
-    stopbits = serial.STOPBITS_ONE_POINT_FIVE
-elif args.stopbits=="2":
-    stopbits = serial.STOPBITS_TWO
-else:
-    stopbits = stopbits_selection()
+stopbits = stopbits_convert(args.stopbits)
 
-if args.parity in ("None", "none", "NONE", "N", "n"):
-    parity = serial.PARITY_NONE
-elif args.parity in ("Even", "even", "EVEN", "E", "e"):
-    parity = serial.PARITY_EVEN
-elif args.parity in ("Odd", "odd", "ODD", "O", "o"):
-    parity = serial.PARITY_ODD
-else:
-    parity = parity_selection()
+parity = parity_convert(args.parity)
 
 if args.flowcontrol in ("0", "none", "NONE", "N", "n", "No", "Off", "off"):
     flowcontrol = 0
 elif args.flowcontrol in ("1", "Yes", "yes", "On", "on"):
     flowcontrol = 1
 else:
-    print("THIS IS BORKEN!")
     flowcontrol = flowcontrol_selection()
 
 if args.message:
@@ -219,7 +229,7 @@ else:
 ser = serial.Serial()
 ser.port = interface
 ser.baudrate = baudrate
-ser.bytesize = databits
+ser.bytesize = int(databits)
 ser.stopbits = stopbits
 ser.parity = parity
 ser.xonxoff = flowcontrol
@@ -244,6 +254,8 @@ print "Message:       " + str(message)
 ###
 ser.open()
 # Write to the serial interface
-ser.write(message)
+ser.write(message+'\r')
+# Read return value
+ser.read(10)
 # Close the connection
 ser.close() 
