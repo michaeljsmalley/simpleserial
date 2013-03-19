@@ -36,7 +36,7 @@ def stopbits_convert(value):
     elif value=="2":
         stopbits = serial.STOPBITS_TWO
     else:
-        stopbits = stopbits_selection()
+        stopbits = stopbits_convert(generate_menu("Available Stopbits", ['1', '1.5', '2'], "Choose a stopbits value"))
 
     return stopbits
 
@@ -48,119 +48,24 @@ def parity_convert(parityvalue):
     elif parityvalue in ("Odd", "odd", "ODD", "O", "o"):
         parity = serial.PARITY_ODD
     else:
-        parity = parity_selection()
+        parity = parity_convert(generate_menu("Available Parities", ['None', 'Even', 'Odd'], "Choose a parity"))
 
     return parity
 
-def interface_selection():
-
-    devicelist = get_interfaces()
-
-    ### Menu ###
-    print "Available Serial Devices"
-    print "------------------------"
-    for item in enumerate(devicelist):
-        print "%d - %s" % item
+def generate_menu(title, options, promptmsg):
+    print title
+    print "=" * len(title)
+    for option in enumerate(options):
+        print "%d - %s" % option
     try:
-        choice = int(raw_input("Choose the number of the device you with to use for serial communications: "))
+        choice = int(raw_input(promptmsg + ": "))
     except ValueError:
-        print "Not a number."
+        print "Not a valid choice."
 
     try:
-        chosen = devicelist[choice]
+        chosen = options[choice]
     except IndexError:
         print "Invalid choice."
-
-    print chosen
-    return chosen
-
-def baudrate_selection():
-    print "Available Baud Rates"
-    print "===================="
-    baudrates = [110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 56000, 57600, 115200]
-    for item in enumerate(baudrates):
-        print "%d - %s" % item
-    try:
-        choice = int(raw_input("Choose the baud rate you would like to use for serial communications: "))
-    except ValueError:
-        print "Not a number."
-
-    try:
-        chosen = baudrates[choice]
-    except IndexError:
-        print "Invalid baud rate."
-
-    return chosen
-
-def databits_selection():
-    print "Available Data Rates"
-    print "===================="
-    databits = [7, 8]
-    for item in enumerate(databits):
-        print "%d - %s" % item
-    try:
-        choice = int(raw_input("Choose the data bits you would like to use for serial communications: "))
-    except ValueError:
-        print "Not a number."
-
-    try:
-        chosen = databits[choice]
-    except IndexError:
-        print "Invalid data bits."
-
-    return chosen
-
-def stopbits_selection():
-    print "Available Stopbits"
-    print "=================="
-    stopbits = ['1','1.5', '2']
-    for item in enumerate(stopbits):
-        print "%d - %s" % item
-    try:
-        choice = int(raw_input("Choose the stopbits you would like to use for serial communications: "))
-    except ValueError:
-        print "Not a number."
-
-    try:
-        chosen = stopbits[choice]
-    except IndexError:
-        print "Invalid stopbits choice."
-
-    return stopbits_convert(chosen)
-
-def parity_selection():
-    print "Available Parities"
-    print "=================="
-    parities = ['None','Even', 'Odd']
-    for item in enumerate(parities):
-        print "%d - %s" % item
-    try:
-        choice = int(raw_input("Choose the parity you would like to use for serial communications: "))
-    except ValueError:
-        print "Not a number."
-
-    try:
-        chosen = parities[choice]
-    except IndexError:
-        print "Invalid parity."
-
-    return parity_convert(chosen)
-
-def flowcontrol_selection():
-    print "Flow Control On or Off?"
-    print "======================="
-    flowcontrol = ['Off', 'On']
-    for item in enumerate(flowcontrol):
-        print "%d - %s" % item
-    try:
-        choice = int(raw_input("Choose whether Flow Control should be on or off for serial communications: "))
-    except ValueError:
-        print "Not a number."
-
-    try:
-        chosen = flowcontrol[choice]
-    except IndexError:
-        print "Invalid flow control choice."
 
     return chosen
 
@@ -182,12 +87,6 @@ def handshake_selection():
 
     return chosen
 
-def message_prompt():
-    print "Please enter a message to send over the serial connection (press [Enter] when finished):"
-    message = raw_input("> ")
-
-    return message
-
 # Set up command line argument parser
 parser = argparse.ArgumentParser(description='A simple serial connection handler.')
 parser.add_argument('-i', '--interface', dest='interface', type=str, help='path to a serial interface, (e.g. /dev/tty.interfacename)')
@@ -201,29 +100,27 @@ parser.add_argument('-m', '--message', dest='message', type=str, help='Message t
 args = parser.parse_args()
 
 # Get value or user selection for serial connection properties and initialize it
-interface = args.interface if args.interface else interface_selection()
-
-baudrate = args.baudrate if args.baudrate else baudrate_selection()
-
-databits = args.databits if args.databits else databits_selection()
-
+interface = args.interface if args.interface else generate_menu("Available Serial Devices", get_interfaces(), "Choose an interface")
+baudrate = args.baudrate if args.baudrate else generate_menu("Available Baud Rates", [110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 56000, 57600, 115200], "Choose a baud rate")
+databits = args.databits if args.databits else generate_menu("Available Databits", [7, 8], "Choose a databits setting: ")
 stopbits = stopbits_convert(args.stopbits)
-
 parity = parity_convert(args.parity)
 
 if args.flowcontrol in ("0", "none", "NONE", "N", "n", "No", "Off", "off"):
-    flowcontrol = 0
+    flowcontrol = "Off"
 elif args.flowcontrol in ("1", "Yes", "yes", "On", "on"):
-    flowcontrol = 1
+    flowcontrol = "On"
 else:
-    flowcontrol = flowcontrol_selection()
+    flowcontrol = generate_menu("Available Flow Controls", ["Off", "On"], "Flow control on or off")
+
+# handshake = args.handshake if args.handshake else generate_menu("Hardware handshake Off or On?", ["Off", "On"], "Hardware handshake be on or off")
 
 if args.message:
     message = args.message
 else:
-    message = message_prompt()
+    print "Please enter a message to send over the serial connection (press [Enter] when finished):"
+    message = raw_input("> ")
 
-# handshake = args.handshake if args.handshake==None else handshake_selection()
 
 # Assign values to ser object
 ser = serial.Serial()
