@@ -155,4 +155,5 @@ ser.write(message+'\r')
 # Read return value
 ser.read(10)
 # Close the connection
-ser.close() 
+ser.close()
+exit
