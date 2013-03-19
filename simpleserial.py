@@ -153,8 +153,8 @@ def simpleserial():
     # Write to the serial interface
     ser.write(message+'\r')
     ser.flush()
-    # Read return value
-    print ser.read(1)
+    # Read 3-byte return value
+    print ser.read(3)
     # Close the connection
     ser.close()
 
