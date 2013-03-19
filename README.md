@@ -12,7 +12,7 @@ Dependencies
 Usage
 -----
 
-    ```bash
+    ``` bash
     ./simpleserial.py
     ```
 
@@ -21,12 +21,12 @@ Examples
 
 Power On a Sharp Aquos TV:
 
-    ```bash
+    ``` bash
     ./simpleserial.py -i /dev/tty.KeySerial1 -r 9600 -d 8 -s 1 -p None -f off -a off -m "POWR1   "
     ```
 
 Power Off a Sharp Aquos TV:
 
-    ```bash
+    ``` bash
     ./simpleserial.py -i /dev/tty.KeySerial1 -r 9600 -d 8 -s 1 -p None -f off -a off -m "POWR0   "
     ```
