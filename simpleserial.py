@@ -87,73 +87,76 @@ def handshake_selection():
 
     return chosen
 
-# Set up command line argument parser
-parser = argparse.ArgumentParser(description='A simple serial connection handler.')
-parser.add_argument('-i', '--interface', dest='interface', type=str, help='path to a serial interface, (e.g. /dev/tty.interfacename)')
-parser.add_argument('-r', '--baudrate', dest='baudrate', help='Desired baud rate, (e.g. 9600)')
-parser.add_argument('-d', '--databits', dest='databits', type=str, help='Desired data bits (e.g. 5, 6, 7 or 8)')
-parser.add_argument('-s', '--stopbits', dest='stopbits', type=str, help='Desired stop bits (e.g. 1, 1.5, or 2)')
-parser.add_argument('-p', '--parity', dest='parity', type=str, help='Desired parity (e.g. None, Even, Odd, Mark, or Space)')
-parser.add_argument('-f', '--flowcontrol', dest='flowcontrol', type=str, help='Flow control on or off')
-parser.add_argument('-a', '--handshake', dest='handshake', type=str, help='Hardware handshake on or off')
-parser.add_argument('-m', '--message', dest='message', type=str, help='Message to send over the serial connection')
-args = parser.parse_args()
+def simpleserial():
+    # Set up command line argument parser
+    parser = argparse.ArgumentParser(description='A simple serial connection handler.')
+    parser.add_argument('-i', '--interface', dest='interface', type=str, help='path to a serial interface, (e.g. /dev/tty.interfacename)')
+    parser.add_argument('-r', '--baudrate', dest='baudrate', help='Desired baud rate, (e.g. 9600)')
+    parser.add_argument('-d', '--databits', dest='databits', type=str, help='Desired data bits (e.g. 5, 6, 7 or 8)')
+    parser.add_argument('-s', '--stopbits', dest='stopbits', type=str, help='Desired stop bits (e.g. 1, 1.5, or 2)')
+    parser.add_argument('-p', '--parity', dest='parity', type=str, help='Desired parity (e.g. None, Even, Odd, Mark, or Space)')
+    parser.add_argument('-f', '--flowcontrol', dest='flowcontrol', type=str, help='Flow control on or off')
+    parser.add_argument('-a', '--handshake', dest='handshake', type=str, help='Hardware handshake on or off')
+    parser.add_argument('-m', '--message', dest='message', type=str, help='Message to send over the serial connection')
+    args = parser.parse_args()
 
-# Get value or user selection for serial connection properties and initialize it
-interface = args.interface if args.interface else generate_menu("Available Serial Devices", get_interfaces(), "Choose an interface")
-baudrate = args.baudrate if args.baudrate else generate_menu("Available Baud Rates", [110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 56000, 57600, 115200], "Choose a baud rate")
-databits = args.databits if args.databits else generate_menu("Available Databits", [7, 8], "Choose a databits setting: ")
-stopbits = stopbits_convert(args.stopbits)
-parity = parity_convert(args.parity)
+    # Get value or user selection for serial connection properties and initialize it
+    interface = args.interface if args.interface else generate_menu("Available Serial Devices", get_interfaces(), "Choose an interface")
+    baudrate = args.baudrate if args.baudrate else generate_menu("Available Baud Rates", [110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 56000, 57600, 115200], "Choose a baud rate")
+    databits = args.databits if args.databits else generate_menu("Available Databits", [7, 8], "Choose a databits setting: ")
+    stopbits = stopbits_convert(args.stopbits)
+    parity = parity_convert(args.parity)
 
-if args.flowcontrol in ("0", "none", "NONE", "N", "n", "No", "Off", "off"):
-    flowcontrol = "Off"
-elif args.flowcontrol in ("1", "Yes", "yes", "On", "on"):
-    flowcontrol = "On"
-else:
-    flowcontrol = generate_menu("Available Flow Controls", ["Off", "On"], "Flow control on or off")
+    if args.flowcontrol in ("0", "none", "NONE", "N", "n", "No", "Off", "off"):
+        flowcontrol = "Off"
+    elif args.flowcontrol in ("1", "Yes", "yes", "On", "on"):
+        flowcontrol = "On"
+    else:
+        flowcontrol = generate_menu("Available Flow Controls", ["Off", "On"], "Flow control on or off")
+    # handshake = args.handshake if args.handshake else generate_menu("Hardware handshake Off or On?", ["Off", "On"], "Hardware handshake be on or off")
 
-# handshake = args.handshake if args.handshake else generate_menu("Hardware handshake Off or On?", ["Off", "On"], "Hardware handshake be on or off")
-
-if args.message:
-    message = args.message
-else:
-    print "Please enter a message to send over the serial connection (press [Enter] when finished):"
-    message = raw_input("> ")
+    if args.message:
+        message = args.message
+    else:
+        print "Please enter a message to send over the serial connection (press [Enter] when finished):"
+        message = raw_input("> ")
 
 
-# Assign values to ser object
-ser = serial.Serial()
-ser.port = interface
-ser.baudrate = baudrate
-ser.bytesize = int(databits)
-ser.stopbits = stopbits
-ser.parity = parity
-ser.xonxoff = flowcontrol
-###
-# STILL NEED TO IMPLEMENT HARDWARE HANDSHAKE
-# if rts:
-# ser.rtscts = handshake
-# else if dsr:
-# ser.dsrdtr = handshake
-###
+    # Assign values to ser object
+    ser = serial.Serial()
+    ser.port = interface
+    ser.baudrate = baudrate
+    ser.bytesize = int(databits)
+    ser.stopbits = stopbits
+    ser.parity = parity
+    ser.xonxoff = flowcontrol
+    ###
+    # STILL NEED TO IMPLEMENT HARDWARE HANDSHAKE
+    # if rts:
+    # ser.rtscts = handshake
+    # else if dsr:
+    # ser.dsrdtr = handshake
+    ###
 
-# Output information about the ser object
-print "Serial Device: " + str(ser.name)
-print "Baud Rate:     " + str(ser.baudrate)
-print "Data Bits:     " + str(ser.bytesize)
-print "Stop Bits:     " + str(ser.stopbits)
-print "Parity:        " + str(ser.parity)
-print "Flow Control:  " + str(ser.xonxoff)
-print "Message:       " + str(message)
-###
-# STILL NEED TO IMPLEMENT HARDWARE HANDSHAKE
-###
-ser.open()
-# Write to the serial interface
-ser.write(message+'\r')
-# Read return value
-ser.read(10)
-# Close the connection
-ser.close()
-exit
+    # Output information about the ser object
+    print "Serial Device: " + str(ser.name)
+    print "Baud Rate:     " + str(ser.baudrate)
+    print "Data Bits:     " + str(ser.bytesize)
+    print "Stop Bits:     " + str(ser.stopbits)
+    print "Parity:        " + str(ser.parity)
+    print "Flow Control:  " + str(ser.xonxoff)
+    print "Message:       " + str(message)
+    ###
+    # STILL NEED TO IMPLEMENT HARDWARE HANDSHAKE
+    ###
+    ser.open()
+    # Write to the serial interface
+    ser.write(message+'\r')
+    ser.flush()
+    # Read return value
+    print ser.read(1)
+    # Close the connection
+    ser.close()
+
+if __name__ == '__main__':
+    simpleserial()
