@@ -16,16 +16,8 @@
 import argparse
 import serial
 import subprocess
+import serial.tools.list_ports
 from sys import platform
-
-def get_interfaces():
-    # Based on the platform, get all potential serial interfaces on the system
-    if platform == "darwin":
-        devicestr = subprocess.check_output("ls /dev/tty.*", shell=True)
-    # Convert string output to a list and remove empty items
-    devicelist = filter(None, devicestr.split('\n'))
-
-    return devicelist
 
 def stopbits_convert(value):
     ''' Converts value to constant understood by pyserial'''
@@ -101,7 +93,7 @@ def simpleserial():
     args = parser.parse_args()
 
     # Get value or user selection for serial connection properties and initialize it
-    interface = args.interface if args.interface else generate_menu("Available Serial Devices", get_interfaces(), "Choose an interface")
+    interface = args.interface if args.interface else generate_menu("Available Serial Devices", [interface[0] for interface in serial.tools.list_ports.comports()], "Choose an interface")
     baudrate = args.baudrate if args.baudrate else generate_menu("Available Baud Rates", [110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 56000, 57600, 115200], "Choose a baud rate")
     databits = args.databits if args.databits else generate_menu("Available Databits", [7, 8], "Choose a databits setting: ")
     stopbits = stopbits_convert(args.stopbits)
