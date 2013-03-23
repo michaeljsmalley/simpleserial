@@ -87,9 +87,11 @@ def simpleserial():
     parser.add_argument('-d', '--databits', dest='databits', type=str, help='Desired data bits (e.g. 5, 6, 7 or 8)')
     parser.add_argument('-s', '--stopbits', dest='stopbits', type=str, help='Desired stop bits (e.g. 1, 1.5, or 2)')
     parser.add_argument('-p', '--parity', dest='parity', type=str, help='Desired parity (e.g. None, Even, Odd, Mark, or Space)')
-    parser.add_argument('-f', '--flowcontrol', dest='flowcontrol', type=str, help='Flow control on or off')
+    parser.add_argument('-c', '--flowcontrol', dest='flowcontrol', type=str, help='Flow control on or off')
     parser.add_argument('-a', '--handshake', dest='handshake', type=str, help='Hardware handshake on or off')
-    parser.add_argument('-m', '--message', dest='message', type=str, help='Message to send over the serial connection')
+    messagesource = parser.add_mutually_exclusive_group()
+    messagesource.add_argument('-m', '--message', dest='message', type=str, help='Message to send over the serial connection')
+    messagesource.add_argument('-f', '--filename', dest='filename', type=str, help='Path to a comma-delimted file containing commands to loop over')
     args = parser.parse_args()
 
     # Get value or user selection for serial connection properties and initialize it
@@ -106,8 +108,10 @@ def simpleserial():
     else:
         flowcontrol = generate_menu("Available Flow Controls", ["Off", "On"], "Flow control on or off")
     # handshake = args.handshake if args.handshake else generate_menu("Hardware handshake Off or On?", ["Off", "On"], "Hardware handshake be on or off")
-
-    if args.message:
+    if args.filename:
+        with open(args.filename) as f:
+            messagelist = f.readlines()
+    elif args.message:
         message = args.message
     else:
         print "Please enter a message to send over the serial connection (press [Enter] when finished):"
@@ -122,6 +126,7 @@ def simpleserial():
     ser.stopbits = stopbits
     ser.parity = parity
     ser.xonxoff = flowcontrol
+
     ###
     # STILL NEED TO IMPLEMENT HARDWARE HANDSHAKE
     # if rts:
@@ -137,16 +142,31 @@ def simpleserial():
     print "Stop Bits:     " + str(ser.stopbits)
     print "Parity:        " + str(ser.parity)
     print "Flow Control:  " + str(ser.xonxoff)
-    print "Message:       " + str(message)
+    try: message
+    except NameError:
+        print "Message:\n"
+        for line in messagelist:
+            print line
+    else:
+        print "Message:       " + str(message)
+    
     ###
     # STILL NEED TO IMPLEMENT HARDWARE HANDSHAKE
     ###
-    ser.open()
+    
     # Write to the serial interface
-    ser.write(message+'\r')
-    ser.flush()
-    # Read 3-byte return value
-    print ser.read(3)
+    ser.open()
+    try: message
+    except NameError:
+        for line in messagelist:
+            line = line.split(',')
+            ser.write(line[0]+'\r')
+            ser.flush
+            print ser.read(line[1].rstrip('\r'))
+    else:
+        ser.write(message+'\r')
+        ser.flush()
+        print ser.read(3)
     # Close the connection
     ser.close()
 
