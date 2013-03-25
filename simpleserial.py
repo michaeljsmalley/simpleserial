@@ -17,6 +17,7 @@ import argparse
 import serial
 import subprocess
 import serial.tools.list_ports
+import time
 from sys import platform
 
 def stopbits_convert(value):
@@ -159,12 +160,13 @@ def simpleserial():
     try: message
     except NameError:
         for line in messagelist:
+            time.sleep(.5)
             line = line.split(',')
-            ser.write(line[0]+'\r')
+            ser.write(str(line[0])+'\r')
             ser.flush
-            print ser.read(line[1].rstrip('\r'))
+            print ser.read(int(line[1].rstrip('\r')))
     else:
-        ser.write(message+'\r')
+        ser.write(str(message)+'\r')
         ser.flush()
         print ser.read(3)
     # Close the connection
