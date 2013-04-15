@@ -127,6 +127,8 @@ def simpleserial():
     ser.stopbits = stopbits
     ser.parity = parity
     ser.xonxoff = flowcontrol
+    # sets read timeout to 5 seconds
+    ser.timeout = 5
 
     ###
     # STILL NEED TO IMPLEMENT HARDWARE HANDSHAKE
